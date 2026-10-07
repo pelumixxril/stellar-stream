@@ -220,6 +220,14 @@ Retries: 3
 
 Start Period: 10s
 
+Backend restart policy: on-failure:5 (bounded; stops after 5 crash restarts)
+
+Guarded startup: `npm run compose:up` waits for backend then frontend health, retries the backend once, and rolls back with `docker compose down` (volumes kept) if they never become healthy. See [RUNBOOK.md](RUNBOOK.md#docker-compose-startup-failure).
+
+Configuration preflight: before starting anything, `compose:up` validates `backend/.env` and exits `2` (no partial rollout) when the settings cannot produce a healthy backend — an empty environment, missing/invalid `CONTRACT_ID` or `SERVER_PRIVATE_KEY` (unless `SOROBAN_DISABLED=true`), malformed URLs, an empty `ALLOWED_ASSETS`, or a `PORT` that does not match the Compose healthcheck port (`3001`). Errors name the variable and rule and never print credential values.
+
+SQLite persistence: inside the Compose stack the database lives at `/app/data/streams.db` in the named `backend-data` volume. On a fresh volume the file is created and migrated automatically; keep `DB_PATH` inside `/app/data` so data survives container recreation.
+
 GET /api/streams
 Purpose: List streams sorted by newest first, with optional filtering and pagination
 
@@ -618,3 +626,13 @@ Wire frontend application to call the contract client directly.
 Add automated contract integration pipelines.
 
 Add real-time event notifications via WebSockets.
+2. **Rotating `JWT_SECRET` (zero-downtime)**
+   - Generate a new secret: `openssl rand -hex 32`.
+   - Move the current value to `JWT_SECRET_PREVIOUS`, put the new value in `JWT_SECRET`, and set
+     `JWT_ROTATION_CUTOVER_AT` to a future ISO 8601 time (e.g. `2026-10-15T00:00:00Z`).
+   - Restart backend instances. New tokens are signed with the new secret; tokens signed with the
+     old secret still verify until the cutover time.
+   - After the cutover time, remove `JWT_SECRET_PREVIOUS` and `JWT_ROTATION_CUTOVER_AT`.
+   - The server refuses to start (no partial rollout) if only one of the two variables is set, the
+     previous secret is shorter than 32 characters or equals `JWT_SECRET`, or the cutover time is not a
+     valid date. Errors name the variable only and never print secret values.

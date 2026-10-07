@@ -7,6 +7,7 @@
     "dev": "ts-node-dev --respawn src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
+    "preflight:deployment": "node scripts/deployment-preflight.cjs",
     "test": "vitest",
     "coverage": "vitest run --coverage",
     "lint": "eslint src"
@@ -47,8 +48,9 @@
     "autocannon": "^8.0.0",
     "supertest": "^7.3.0",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^7.0.2",
+    "typescript": "^6.0.3",
     "typescript-eslint": "^8.70.1",
+    "vite": "^6.4.0",
     "vitest": "^5.0.1"
   },
   "pnpm": {

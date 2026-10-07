@@ -79,3 +79,15 @@ export const indexerOutcome = new Gauge({
   help: "Indexer monitoring health: 0=success, 1=transient_delay, 2=blocked",
   registers: [register],
 });
+
+export const sqliteRestoreOutcome = new Gauge({
+  name: "sqlite_restore_outcome",
+  help: "SQLite restore schema check outcome at startup: 0=success, 1=transient_delay, 2=blocked, 3=interrupted",
+  registers: [register],
+});
+
+export const secretsRotationOutcome = new Gauge({
+  name: "secrets_rotation_outcome",
+  help: "Secrets rotation (JWT_SECRET / SERVER_SIGNING_KEY) rollout outcome: 0=success, 1=transient_delay, 2=blocked",
+  registers: [register],
+});
